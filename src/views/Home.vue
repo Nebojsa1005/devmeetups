@@ -57,13 +57,15 @@ export default {
         this.direction = 'right'
     }  
   },
-  async mounted() {
-    await this.signUpWithLocal
+  async created() {
     if(!this.isLoggedIn) {
-      this.$router.push('/sign-up')
+      await this.signUpWithLocal
+      if(!this.isLoggedIn) {
+        this.$router.push('/sign-up')
+      }
     } else {
       this.fetchMeetups
-    }
+    } 
   }
 }
 </script>

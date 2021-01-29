@@ -29,7 +29,9 @@
 
             <p class="error-message" v-if="$v.password.$error">Must be at least 6 characters long</p>
 
+            <h3 v-if="error">{{ error.replace("_", " ") }}</h3>
             <button class="form-button">Sign Up</button>
+            <p>Already have an accout? <router-link class="existing-account" to="/sing-in">Sign In</router-link> </p>
         </form>
     </div>
 </template>
@@ -55,14 +57,20 @@ export default {
             minLen: minLength(4)
         }
     },
+    computed: {
+        error() {
+            return this.$store.getters.errorSignUp
+        }
+    },
     methods: {
-        submit() {
+        async submit() {
             const formData = {
                 email: this.email,
                 password: this.password,
                 username: this.username
             }
-            this.$store.dispatch('signUp', formData)
+            await this.$store.dispatch('signUp', formData)
+            this.$router.push('/')
         }
     }
 }
@@ -70,6 +78,10 @@ export default {
 
 <style scoped>
 p .link {
+    color: white;
+}
+
+.existing-account {
     color: white;
 }
 </style>

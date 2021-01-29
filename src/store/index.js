@@ -14,7 +14,9 @@ export default new Vuex.Store({
     userId: null,
     expiresIn: null,
     isLoggedIn: false,
-    currentUser: null
+    currentUser: null,
+    errorSignInText: null,
+    errorSignUpText: null
   },
   mutations: {
     setMeetups( state, meetups ) {
@@ -24,8 +26,6 @@ export default new Vuex.Store({
       state.tokenId = loginData.idToken
       state.userId = loginData.localId
       state.isLoggedIn = true
-      state.tokenId = localStorage.getItem('tokenId')
-      state.userId = localStorage.getItem('userId')
     },
     logout( state ) {
       localStorage.removeItem('tokenId')
@@ -46,6 +46,12 @@ export default new Vuex.Store({
     },
     unRegister( state, index ) {
       state.currentUser.registeredMeetups.splice(index, 1)
+    },
+    errorSignIn ( state, error ) {
+      state.errorSignInText = error.message.replaceAll('_', " ")
+    },
+    errorSignUp ( state, error ) {
+      state.errorSignUpText = error.message.replaceAll('_', " ")
     }
   },
   actions: {
@@ -72,49 +78,52 @@ export default new Vuex.Store({
     //===================AUTH
     async signUp ({ commit, state, dispatch }, formData) {
       const responseData = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=AIzaSyCXgBncsxFKUpaNh-UUqp8Pfdzrqds3PRQ', {
-          method: 'POST', 
-          body: JSON.stringify({
-              email: formData.email,
-              password: formData.password,
-              returnSecureToken	: true
-          }) 
+        method: 'POST', 
+        body: JSON.stringify({
+          email: formData.email,
+          username: formData.username,
+          password: formData.password,
+          returnSecureToken	: true
+        }) 
       })
       const response = await responseData.json()
-      let expirationTime = new Date().getTime() + response.expiresIn * 1000
-  
-      localStorage.setItem('tokenId', state.tokenId)
-      localStorage.setItem('userId', state.userId)
-      localStorage.setItem('expiresIn', expirationTime)
+      if (response.error) {
+        commit('errorSignUp', response.error)
+      } else {
+        commit('signUser', response)
+        await axios.post('https://meetups-361fa-default-rtdb.firebaseio.com/users.json?auth=' + state.tokenId, {
+          username: formData.username,
+          userId: response.localId
+        })
+        
+        let expirationTime = new Date().getTime() + response.expiresIn * 1000
+        localStorage.setItem('tokenId', state.tokenId)
+        localStorage.setItem('userId', state.userId)
+        localStorage.setItem('expiresIn', expirationTime)
+        
+        timer = setTimeout(function () {
+          commit('logout')
+        }, expirationTime)
+      }
 
-      timer = setTimeout(function () {
-        commit('logout')
-      }, expirationTime)
-
-      commit('signUser', response)
-      await axios.post('https://meetups-361fa-default-rtdb.firebaseio.com/users.json?auth=' + state.tokenId, {
-        username: formData.username,
-        userId: response.localId
-      })
       dispatch('setCurrentUser')
     },
     signUpWithLocal( {commit, dispatch} ) {
-      let expiresIn = localStorage.getItem('expiresIn')
-      let expirationTime = new Date().getTime() - Number(expiresIn)
       if(!(localStorage.getItem('tokenId') && localStorage.getItem('userId'))) {
         return
       }
+      let expiresIn = localStorage.getItem('expiresIn')
+      let expirationTime = new Date().getTime() - Number(expiresIn)
       // let expirationTime = 3000
-      if (new Date() >= expirationTime) {
-        return 
-      }
       commit('signUser', {
-        isLoggedIn: true,
-        tokenId: localStorage.getItem('tokenId'),
-        userId: localStorage.getItem('userId')
+        idToken: localStorage.getItem('tokenId'),
+        localId: localStorage.getItem('userId')
       })
+
       timer = setTimeout(function () {
         commit('logout')
       }, expirationTime)
+
       dispatch('setCurrentUser')
     },
     async signIn({ commit, dispatch }, authData ) {
@@ -127,19 +136,23 @@ export default new Vuex.Store({
         })
       })
       const response = await responseData.json()
-
-      let expirationTime = new Date().getTime() - response.expiresIn * 1000 
+      if (response.error) {
+        commit('errorSignIn', response.error)
+      } else {
+        let expirationTime = new Date().getTime() - response.expiresIn * 1000 
+    
+        localStorage.setItem('tokenId', response.idToken)
+        localStorage.setItem('userId', response.localId)
+        localStorage.setItem('expiresIn', expirationTime)
   
-      localStorage.setItem('tokenId', response.idToken)
-      localStorage.setItem('userId', response.localId)
-      localStorage.setItem('expiresIn', expirationTime)
+        timer = setTimeout(function () {
+          commit('logout')
+        }, expirationTime)
+  
+        commit('signUser', response)
+        dispatch('setCurrentUser')
+      }
 
-      timer = setTimeout(function () {
-        commit('logout')
-      }, expirationTime)
-
-      commit('signUser', response)
-      dispatch('setCurrentUser')
     },
     setCurrentUser({ commit, state }) {
       axios.get('https://meetups-361fa-default-rtdb.firebaseio.com/users.json?auth=' + state.tokenId)
@@ -155,7 +168,6 @@ export default new Vuex.Store({
     },
     //================REGISTRATION
     registerMeetup({ state, dispatch }, meetup ) {
-      console.log('registerMeetup');
       const wantedMeetup = state.meetups.filter(el => {
         return el.id === meetup.id
       })
@@ -163,7 +175,6 @@ export default new Vuex.Store({
       dispatch('updateUser', state.currentUser)
     },
     async unRegister({commit, dispatch}, index) {
-      console.log('unRegister');
       await commit('unRegister', index)
       dispatch('updateUser')
     },
@@ -186,6 +197,12 @@ export default new Vuex.Store({
     },
     currentUser( state ) {
       return state.currentUser
+    },
+    errorSignIn ( state ) {
+      return state.errorSignInText
+    },
+    errorSignUp( state ) {
+      return state.errorSignUpText
     }
   }
 })

@@ -8,15 +8,18 @@
                 @input="$v.userEmail.$touch()"
                 type="email"
                 v-model="userEmail">
-            <p class="error-mesage" v-if="$v.userEmail.$error">Must be a valid email</p>
+            <p class="error-message" v-if="$v.userEmail.$error">Must be a valid email</p>
 
             <label>Password</label>
             <input type="password"
                 :class="{invalid: $v.password.$error}"
                 @input="$v.password.$touch()"
                 v-model="password">
-            <p class="error-mesage" v-if="$v.password.$error">Must be more then 6 characters</p>
-            <button class="form-button" :disable="$v.$invalid">Signup</button>
+            <p class="error-message" v-if="$v.password.$error">Must be more then 6 characters</p>
+            
+            <h3 v-if="error">{{ error }}</h3>
+            <button class="form-button" :disable="$v.$invalid">Sign In</button>
+            <p>Don`t have an accout? <router-link class="existing-account" to="/sign-up">Sign Up</router-link> </p>
         </form>
     </div>
 </template>
@@ -38,6 +41,11 @@ export default {
             minLen: minLength(6)
         }
     },
+    computed: {
+        error() {
+            return this.$store.getters.errorSignIn
+        }
+    },
     methods: {
         async submit() {
             const formData = {
@@ -52,6 +60,7 @@ export default {
 </script>
 
 <style scoped>
-
-
+.existing-account {
+    color: white;
+}
 </style>

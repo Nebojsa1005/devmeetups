@@ -102,6 +102,7 @@ label {
 }
 
 .form-button {
+  cursor: pointer;
   padding: 12px 8px;
   margin-top: 10px;
   border: none;
@@ -121,6 +122,7 @@ label {
   -webkit-box-shadow: 0px 0px 15px 4px red;
           box-shadow: 0px 0px 15px 4px red
 }
+
 
 /* =====================FORM MEDIA QUERIES */
 

@@ -21,12 +21,14 @@ export default {
         }
     },
   async mounted() {
-    await this.signUpWithLocal
     if(!this.isLoggedIn) {
-      this.$router.push('/sign-up')
+      await this.signUpWithLocal
+      if(!this.isLoggedIn) {
+        this.$router.push('/sign-up')
+      }    
     } else {
-      this.fetchMeetups
-    }
+        this.fetchMeetups
+      }
   }
 }
 </script>

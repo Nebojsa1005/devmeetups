@@ -35,10 +35,10 @@ const routes = [
     name: 'SignIn',
     component: SignIn
   },
-  {
-    path: '/:notFound(.*)',
-    redirect: '/sign-up'
-  }
+  // {
+  //   path: '/:notFound(.*)',
+  //   redirect: '/sign-up'
+  // }
 ]
 
 const router = new VueRouter({

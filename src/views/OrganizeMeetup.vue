@@ -50,7 +50,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['tokenId']),
+    ...mapGetters(['tokenId','isLoggedIn']),
     ...mapActions(['organizeMeetup', 'fetchMeetups', 'signUpWithLocal'])
   },
   methods: {
@@ -66,12 +66,14 @@ export default {
     }
   },
   async mounted() {
-    if (this.tokenId === null && !localStorage.getItem('tokenId') && !localStorage.getItem('userId')) {
-      this.$router.push('/sign-up')
-    } else {
-      this.signUpWithLocal
-      this.fetchMeetups
-    }
+    if(!this.isLoggedIn) {
+      await this.signUpWithLocal
+      if(!this.isLoggedIn) {
+        this.$router.push('/sign-up')
+      } else {
+        this.fetchMeetups
+      }
+    }  
   }
 }
 </script>
