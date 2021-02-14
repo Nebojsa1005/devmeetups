@@ -16,7 +16,9 @@ export default new Vuex.Store({
     isLoggedIn: false,
     currentUser: null,
     errorSignInText: null,
-    errorSignUpText: null
+    errorSignUpText: null,
+    showBackdrop: false,
+    sideBarIsActive: false
   },
   mutations: {
     setMeetups( state, meetups ) {
@@ -52,6 +54,10 @@ export default new Vuex.Store({
     },
     errorSignUp ( state, error ) {
       state.errorSignUpText = error.message.replaceAll('_', " ")
+    },
+    showSideBar( state ) {
+      state.showBackdrop = !state.showBackdrop
+      state.sideBarIsActive = !state.sideBarIsActive
     }
   },
   actions: {
@@ -203,6 +209,12 @@ export default new Vuex.Store({
     },
     errorSignUp( state ) {
       return state.errorSignUpText
+    },
+    showBackdrop( state ) {
+      return state.showBackdrop
+    },
+    showSideBar( state ) {
+      return state.sideBarIsActive
     }
   }
 })
